@@ -1,0 +1,134 @@
+{% extends "base.html" %} {% load staticfiles %}{% block css%}
+<style type="text/css">
+	tr td {
+		background-color: white;
+	}
+	
+	table {
+		margin-top: 100px;
+	}
+	
+	img {
+		height: 100px;
+		width: 200px;
+	}
+</style>
+{%endblock%} {% block contentRight %}
+
+<ol class="breadcrumb">
+	<li>
+		<a href="http://localhost:8000"><i class="fa fa-dashboard"></i> Home</a>
+	</li>
+	<li>商品列表</li>
+	<li class="active">商品：<strong class="lb"></strong> 的轮播图</li>
+</ol>
+
+{% endblock %} {% block contentLeft %} 轮播图
+<small>Version 5.0</small> {% endblock %} {% block content %}
+<div class="center-middle">
+	<br />
+	<button class="btn btn-default plus btn btn-primary demo3">轮播图添加</button>
+	<table class="table table-bordered userTable"style="margin: 10px;">
+		<tr>
+			<th colspan="15" style="background-color:#E0EEEE;">商品图片修改</th>
+		</tr>
+		<tr style="background-color: #E0EEEE; text-align: center;vertical-align: middle;">
+				<!-- <td>
+					<input type="checkbox" id="checkbox-all" value="$(goodsid)">
+					</td> -->
+			<td width="10%"><input type="checkbox" id="checkbox-all"/></td>
+			<td width="10%"><b>序号</b></td>
+			<td width="40%"><b>图片</b></td>
+			<td width="20%"><b>顺序</b></td>
+			<td width="20%"><b>编辑</b></td>
+			
+		</tr>	
+		
+	</table>
+</div>
+{% endblock %}
+
+{%block script %}
+<script src="{% static 'layer/layer.js' %}" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+var bb="";
+
+	function getUrlParam(name){
+		var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+		var r = window.location.search.substr(1).match(reg);
+		if (r!=null) return unescape(r[2]); return null;
+		}
+	var goodsid = getUrlParam("goodsid")
+	myPost("goodsSelectByid",{"goodsid":goodsid},function(data){
+			for(var i=0;i<data.data.length;i++){
+				
+				
+				if(data.data[i].goodsid == goodsid){
+					
+					var number = 1;
+					var picName = data.data[i].images;
+					
+					var goodsname = data.data[i].goodsname
+					bb=goodsname
+					
+					// var order = 1;
+					var picNames = new Array()
+					if (picName)
+					{
+						console.log(picName.indexOf("---"));
+						if (picName.indexOf("---") >= 0)
+						{
+						
+							picNames =picName.split("---");
+							
+						}
+					}
+					if (picNames.length != 0)
+					{
+						for(var i=0;i<picNames.length-1;i++){
+							newPic = picNames[i]
+							number = i +1;
+							var ele = '<tr class="mytr"><td style="text-align: center;vertical-align: middle;" width="10%"><input type="checkbox" id="checkbox-all"/></td><td style="text-align: center;vertical-align: middle;" width="10%">'+number+'</td><td class="mytd" style="text-align: center;vertical-align: middle;" width="50%"><img src="http://localhost:8000/static/myfile/'+ newPic +'" /></td><td style="text-align: center;vertical-align: middle;" width="20%">'+number+'</td><td style="text-align: center;vertical-align: middle;" width="20%"><span class="glyphicon glyphicon-trash delBtn" style="margin-left: 10px;"></span></td></tr>'
+							$(".userTable").append(ele);
+						}
+					}
+					else{
+						layer.msg('该商品没有图片')
+						console.log('............000...........')
+						
+					}
+					$(".lb").text(bb)
+					
+					
+					$(".delBtn").click(function(){
+							var that = $(this).parents("tr")
+							var a = that.children(".mytd")
+							var b = $(a).children()
+							
+//								获取图片链接c
+							c = $(b)[0].src
+							console.log(c)
+							var urls = new Array()
+							urls =c.split("/")
+							//获取图片名
+							getUrl = urls.pop()
+							console.log(getUrl)
+							finalUrl = picName.replace(getUrl+'---','')
+							console.log(finalUrl)
+							console.log(goodsid)
+							
+							myPost("goodsManageJsonUpdata",{"images":finalUrl,"goodsid":goodsid},function(data){
+								console.log("ajax发送请求成功")
+								location.reload() 
+								
+							})
+							});
+							
+					}
+				$(".demo3").click(function() {
+					window.location.href = "/changeLunbo/?goodsid=" + goodsid;
+				});
+			}
+		})
+</script>
+{% endblock%}

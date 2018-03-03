@@ -1,0 +1,103 @@
+{% extends "base.html" %} {% load staticfiles %} 
+{% block css %}
+    <style>
+    .table-striped , .table-striped thead tr th , .table-striped thead tr td{
+        border: 1px solid rgb(199, 196, 196);
+        vertical-align: middle;
+        /* align-content: center; */
+        text-align: center;
+    }
+</style>
+{% endblock%}
+{% block content %}
+<div class="" id="bigdiv">
+    <div style="margin-bottom: 20px">
+        <form class="form-inline">
+            <div class="form-group">
+                <div class="input-group" style="margin-right:50px">
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                    <div class="input-group-addon" style="background-color:rgb(218, 218, 214);">至</div>
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                </div>
+                <button type="submit" class="btn btn-success">搜索</button>
+                <button type="submit" class="btn btn-primary">导出纪录</button>
+            </div>
+        </form>
+    </div>
+    <div style="margin-bottom: 20px">
+        <form class="form-inline">
+            <div class="form-group">
+                <div class="input-group" style="margin-right:50px">
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                    <div class="input-group-addon" style="background-color:rgb(218, 218, 214);">或</div>
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                    <div class="input-group-addon" style="background-color:rgb(218, 218, 214);">或</div>
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                    <div class="input-group-addon" style="background-color:rgb(218, 218, 214);">或</div>
+                    <input type="text" class="form-control" id="exampleInputAmount" placeholder="Amount">
+                </div>
+                <input type="checkbox" name="" id="" value="" value="" style="margin:auto;">
+                <label for="">订单提醒</label>
+            </div>
+        </form>
+    </div>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr class="biaojuzhong">
+                <th>订单号</th>
+                <th>姓名</th>
+                <th>总金额</th>
+                <th>支付状态</th>
+                <th>日期</th>
+                <th>订单状态</th>
+                <th>推广品</th>
+                <th>操作</th>
+            </tr>
+            <tr class="biaojuzhong">
+                <td>456123789</td>
+                <td>张三</td>
+                <td>￥17.00元</td>
+                <td>hhhh</td>
+                <td>下单时间:2017/05/06<br>
+                支付时间:2017/12/10</td>
+                <td>hhhh</td>
+                <td>duleisi</td>
+                <td>hhhh</td>
+            </tr>
+            <tr class="biaojuzhong">
+                <td>456123789</td>
+                <td>张三</td>
+                <td>￥17.00元</td>
+                <td>hhhh</td>
+                <td>下单时间:2017/05/06<br>
+                支付时间:2017/12/10</td>
+                <td>hhhh</td>
+                <td>duleisi</td>
+                <td>hhhh</td>
+            </tr>
+            <tr class="biaojuzhong">
+                <td>456123789</td>
+                <td>张三</td>
+                <td>￥17.00元</td>
+                <td>hhhh</td>
+                <td>下单时间:2017/05/06<br>
+                支付时间:2017/12/10</td>
+                <td>hhhh</td>
+                <td>duleisi</td>
+                <td>hhhh</td>
+            </tr>
+            <tr class="biaojuzhong">
+                <td>456123789</td>
+                <td>张三</td>
+                <td>￥17.00元</td>
+                <td>hhhh</td>
+                <td>下单时间:2017/05/06<br>
+                支付时间:2017/12/10</td>
+                <td>hhhh</td>
+                <td>duleisi</td>
+                <td>hhhh</td>
+            </tr>
+        </thead>
+    </table>
+</div>
+{% endblock%}

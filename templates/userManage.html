@@ -1,0 +1,447 @@
+{% extends "base.html" %}{% load staticfiles %} {% block css %}
+<style type="text/css">
+	.form-inline {
+		font-family: "黑体";
+		height: 20px;
+		text-align: center;
+	}
+	
+	.trash,
+	.delete {
+		background-color: #D33A3C;
+	}
+	
+	.plus {
+		background-color: #00c0ef;
+		border-color: #00acd6;
+	}
+	
+	.submit,
+	.edit {
+		background-color: #4FAF4C;
+	}
+	
+	th {
+		background-color: #F2F9FE;
+	}
+	
+	#natureEle .nature {
+		text-align: center;
+		background-color: #F2F9FE;
+	}
+	
+	#userTable .ele {
+		text-align: center;
+		vertical-align: middle;
+		background-color: white;
+	}
+	
+	.table {
+		width: 100%;
+	}
+	
+	.count {
+		font: "黑体"
+	}
+	
+	.btn {
+		color: black;
+	}
+	
+	.btn-default {
+		color: white;
+	}
+	
+	#preview {
+		width: 40;
+		height: 40px;
+	}
+	
+	#under .bottom {
+		background-color: white;
+		border: 1px solid lightgrey;
+	}
+</style>
+{% endblock %} {% block content %}
+<div class="container-fluid">
+	<form class="form-inline searchForm" role="form" method="post">
+		<div class="form-group">
+			<label class="">用户名:</label>
+			<input type="text" class="form-control" name="username" id="exampleUsername" placeholder="请输入用户名">
+		</div>
+		<div class="form-group">
+			<label class="">手机号:</label>
+			<input type="text" class="form-control" name="phone" id="exampleInputPhoneNumber" placeholder="请输入手机号">
+		</div>
+		<button type="button" class="btn btn-default submit search"><span class = "glyphicon glyphicon-search">查询会员</span></button>
+	</form>
+	<hr/>
+
+	<!-- <form action="http://localhost:8000/shortMsg/" method="post">
+		<input type="text" name="username" placeholder="请输入用户名">
+		<input type="submit" value="提交">
+	
+	</form> -->
+
+	<table class="table table-bordered">
+		<th colspan="12">
+
+			<button class="btn btn-default trash AllDelete"><span class = "glyphicon glyphicon-trash">批量删除</span></button>
+			<button class="btn btn-default plus btn btn-primary" data-toggle="modal" data-target="#plusModal"><span class = "glyphicon glyphicon-plus">添加会员</span></button>
+			<label id="userNumber" class="count" style="float: right; padding-right: 4%;">共有数据</label>
+
+		</th>
+		<tr id="natureEle">
+			<td class="info nature"><input type="checkbox" id="checkbox-all"></td>
+			<td class="info nature">序号</td>
+			<td class="info nature">ID</td>
+			<td class="info nature">会员名</td>
+			<td class="info nature">密码</td>
+			<td class="info nature">电话</td>
+			<td class="info nature">微信</td>
+			<td class="info nature">头像</td>
+			<td class="info nature">账户余额</td>
+			<td class="info nature">等级</td>
+			<td class="info nature">激活码</td>
+			<td class="info nature">编辑</td>
+		</tr>
+
+		<tbody id="userTable">
+
+		</tbody>
+
+	</table>
+	<div class="row" id="div3" style=" padding: 1% 0;">
+		<div class="col-md-12" style="text-align: left;">
+
+			<div class="text-center">
+				<ul id="visible-pages-example"></ul>
+			</div>
+		</div>
+	</div>
+
+	<div id="plusModal" class="modal fade" tabindex="-1" role="dialog" data-backdrop="false" data-show="true">
+		<div class="modal-dialog" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					<h4 class="modal-title">添加会员</h4>
+				</div>
+				<div class="modal-body">
+					<form class="addform" action="http://localhost:8000/userManageJsonAdd/" method="post">
+						<div class="form-group">
+							<label for="recipient-name" class="control-label">用户昵称:</label>
+							<input type="text" class="form-control" name="username">
+						</div>
+						<div class="form-group">
+							<label for="recipient-name" class="control-label">用户密码:</label>
+							<input type="text" class="form-control" name="password">
+						</div>
+						<input type="submit" class="btn btn-primary" value="添加">
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<img src="" alt="">
+
+	<div class="myModal">
+
+	</div>
+
+	{% endblock %} {% block script %}
+	<script src="{% static 'layer/layer.js' %}" type="text/javascript" charset="utf-8"></script>
+	<script src="{% static 'js/jquery.form.min.js' %}"></script>
+
+	<script type="text/javascript">
+		var mainData = ""
+
+		var defaultPageOptioins = "";
+
+		$('.addform').on('submit', function(e) {
+			e.preventDefault();
+			console.log("8888888888888888")
+			$(this).ajaxSubmit({
+				success: function(result) {
+					layer.msg('添加成功');
+					window.location.reload();
+					parent.$("#plusModal").hide();
+				}
+			})
+		});
+
+		$('.addform').keydown(function(e){
+			var key = window.event?e.keyCode:e.which;
+    		if(key.toString() == "13"){
+        		return false;
+    		}
+		})
+
+
+		myPost("userManageJsonSelect",{},function(result){
+			mainData = result;
+			dataParse(mainData);
+		})
+
+		function createList(page) {
+			$("#userTable").empty()
+			for(i = 0; i < mainData.data.length; i++) {
+				if(i >= (page - 1) * 10 && i <= page * 10 - 1) {
+					mydata = mainData.data[i]
+					var NO = i + 1;
+					var userid = mydata["userid"];
+					var username = mydata["username"];
+					var pwd = mydata["pwd"];
+					var phone = mydata["phone"];
+					var wxid = mydata["wxid"];
+					var headimg = mydata["headimg"];
+					var acountmoney = mydata["acountmoney"];
+					var power = mydata["power"];
+					var activecode = mydata["activecode"];
+					var ele = '<tr class="mytr" NO="' + NO + '" userid = "' + userid + '" username = "' + username + '" pwd = "' + pwd + '" phone = "' + phone + '" wxid = "' + wxid + '" acountmoney = "' + acountmoney + '" headimg="' + headimg + '"  power = "' + power + '" activecode = "' + activecode + '"><td class="info ele"><input class="checkbox-one" name="checkbox-one" type="checkbox"/></td><td class="info ele">' + NO + '</td><td class="info ele">' + userid + '</td><td class="info ele">' + username + '</td><td class="info ele">' + pwd + '</td><td class="info ele">' + phone + '</td><td class="info ele">' + wxid + '</td><td class="info ele"><img height="40px" width="40px" src="http://localhost:8000/static/myfile/' + headimg + '" alt=""></td><td class="info ele">' + acountmoney + '</td><td class="info ele">' + power + '</td><td class="info ele">' + activecode + '</td><td class="info ele"><button class="btn btn-default edit btn-primary" data-toggle="modal" data-target="#editModal' + userid + '">编辑</button>     <button class="btn btn-default delete">删除</button></td></tr>'
+					$(".myModal").empty();
+
+					$("#userTable").append(ele);
+				}
+
+			}
+
+			addEvent();
+		}
+
+		function addEvent(){
+			$(".delete").click(function() {
+				var that = $(this).parents('tr');
+				var objData = that.attr('userid')
+				var url = HomeUrl + "userManageJsonDelete/";
+				console.log(objData)
+				ajaxFn(url, objData, function() {
+					// $(that).remove();
+					window.location.reload()
+					layer.msg('删除成功');
+
+				})
+			})
+			$(".edit").click(function() {
+				console.log("llll");
+
+				var that = $(this).parents("tr");
+				var userid = that.attr('userid');
+				aaa = userid;
+				var username = that.attr('username');
+				var pwd = that.attr('pwd');
+				var phone = that.attr('phone');
+				var wxid = that.attr('wxid');
+				var headimg = that.attr('headimg');
+				var acountmoney = that.attr('acountmoney');
+				var power = that.attr('power');
+				var activecode = that.attr('activecode');
+				var ele = '<div class="modal fade bs-example-modal-sm theEditModal" id="editModal' + userid + '" tabindex="-1" role="dialog" aria-labelledby="mySmallModalLabel"><div class="modal-dialog" role="document"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button><h4 class="modal-title">修改'+ username +'资料</h4></div><div class="modal-header" id="updetaModal"><form class="editFormContent" action="http://localhost:8000/userManageJsonUpdate/" method="post"><div class="form-group"><label for="recipient-name" class="control-label">ID：</label><input type="text" class="form-control" name="userid" value="' + userid + '" readonly="readonly"></div><div class="form-group"><label for="recipient-name" class="control-label">会员名:</label><input type="text" class="form-control" name="username" value="' + username + '"></div><div class="form-group"><label for="recipient-name" class="control-label">密码:</label><input type="text" class="form-control" name="pwd" value="' + pwd + '"></div><div class="form-group"><label for="recipient-name" class="control-label">电话:</label><input type="text" class="form-control" name="phone" value="' + phone + '"></div><div class="form-group" enctype="multipart/form-data"><label for="recipient-name" class="control-label">头像:</label><img id="preview" /><textbox><input name="goodsid" class="myGoodsid" type="text" value="" hidden><input type="file" name="headimg" id= "images" onchange="imgPreview(this)" accept="image/gif, image/jpeg" value="' + headimg + '"></textbox></div><div class="form-group"><label for="recipient-name" class="control-label">账户余额:</label><input type="text" class="form-control" name="acountmoney" value="' + acountmoney + '"></div><div class="form-group"><label for="recipient-name" class="control-label">等级:</label><input type="text" class="form-control" name="power" value="' + power + '"></div><div class="form-group"><label for="recipient-name" class="control-label">激活码:</label><input type="text" class="form-control" name="activecode" value="' + activecode + '"></div><input type="submit" class="btn btn-primary" value="更新"></form></div></form></div></div></div></div>'
+				$(".myModal").empty();
+
+				$(".myModal").append(ele)                                                                                                                                                                                                                                                          
+
+				$(".editFormContent").eq(0).on("submit", function(e) {
+					e.preventDefault();
+					$(this).ajaxSubmit({
+						success: function(result) {
+							console.log('post数据成功')
+							layer.msg('更新成功');
+							window.location.reload();
+							parent.$(".theEditModal").hide();
+							$(".editFormContent").on("submit", "")
+						}
+					})
+				})
+			})
+			$("#userNumber").text("共有数据" + mainData.data.length + "条");
+
+		}
+
+		function dataParse(data) {
+			console.log(data);
+			createList(1)
+
+			
+			defaultPageOptioins = {
+				totalPages: Math.ceil(data.data.length / 10),
+				first: "首页",
+				last: "尾页",
+				prev: '上一页',
+				next: '下一页',
+				startPage: 1,
+				visiblePages: 5,
+				version: '1.1',
+				onPageClick: function(event, page) {
+					console.log("---------------------" , page);
+					createList(page);
+				}
+			}
+			$('#visible-pages-example').twbsPagination(defaultPageOptioins);
+		}
+		$(".AllDelete").click(function() {
+			console.log("批量删除");
+			var isEmeptySelect = true;
+			$("[name = checkbox-one]:checkbox").each(function() {
+				if($(this).is(":checked")) {
+					isEmeptySelect = false;
+					console.log("xuanzhong");
+					var that = $(this).parents('tr');
+					var objData = that.attr('userid')
+					var url = HomeUrl + "userManageJsonDelete/";
+					console.log(objData)
+					ajaxFn(url, objData, function() {
+						$(that).remove();
+						layer.msg('删除成功');
+					})
+				}
+			});
+			if (isEmeptySelect == true) {
+	            console.log("000000");
+	            layer.msg("选择要删除的内容");
+	        }
+
+		});
+
+		function imgPreview(fileDom) {
+			//判断是否支持FileReader
+			if(window.FileReader) {
+				var reader = new FileReader();
+			} else {
+				alert("您的设备不支持图片预览功能，如需该功能请升级您的设备！");
+			}
+
+			//获取文件
+			var file = fileDom.files[0];
+
+			var imageType = /^image\//;
+			//是否是图片
+			if(!imageType.test(file.type)) {
+				alert("请选择图片！");
+				return;
+			}
+			//读取完成
+			reader.onload = function(e) {
+				//获取图片dom
+				var img = document.getElementById("preview");
+				//图片路径设置为读取的图片
+				img.src = e.target.result;
+			};
+
+			reader.readAsDataURL(file);
+
+		}
+
+		function getUrlParam(name) {
+			var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+			var r = window.location.search.substr(1).match(reg);
+			if(r != null) return unescape(r[2]);
+			return null;
+		}
+
+		var goodsid = getUrlParam("goodsid")
+
+		$(".myGoodsid").val(goodsid);
+
+		$('#checkbox-all').click(function() {
+			if($('#checkbox-all').is(':checked')) {
+				console.log("get - all")
+				$(".checkbox-one").prop("checked", true);
+			} else {
+				console.log("close - all")
+				$(".checkbox-one").prop("checked", false);
+			}
+		})
+
+		function ajaxSubmitForm() {
+			var option = {
+				url: HomeUrl + "userManageJsonSelect/",
+				type: 'POST',
+				dataType: 'json',
+				success: function(data) {
+					if(data.data != "") {
+						layer.msg("查找成功")
+						mainData = data
+
+						$('.mytr').remove();
+						document.getElementById("exampleUsername").value = "";
+						document.getElementById("exampleInputPhoneNumber").value = "";
+						createList(1);
+						var totalPages = mainData.data.length / 10 + 1;
+						var currentPageOption = {
+							totalPages: totalPages,
+							first: "首页",
+							last: "尾页",
+							prev: '上一页',
+							next: '下一页',
+							startPage: 1,
+							visiblePages: totalPages > 5 ? 5 : totalPages ,
+							version: '1.1',
+							onPageClick: function(event, page) {
+								createList(page);
+							}
+						};
+						$('#visible-pages-example').twbsPagination('destroy');
+						$('#visible-pages-example').twbsPagination($.extend({}, defaultPageOptioins, currentPageOption));
+						defaultPageOptioins = currentPageOption;
+					}
+					else {
+						layer.msg("没有查找到数据")
+					}
+
+				},
+				error: function(data) {
+					console.log("chucuole ");
+				}
+			};
+			var _form = document.getElementsByClassName("searchForm")[0]
+			$(".searchForm").ajaxSubmit(option);
+		}
+		$(".search").click(function() {
+			console.log("99999999999999")
+			username = $("#exampleUsername").val();
+					phone = $("#exampleInputPhoneNumber").val();
+					if (username == ""){
+						layer.msg("请输入用户名");
+					}
+					else{
+						layer.msg("请稍候");
+						ajaxSubmitForm();
+					}
+		});
+		
+
+		function ajaxFn(urlString, postdata, fn) {
+			var xmlhttp = new XMLHttpRequest();
+			xmlhttp.onreadystatechange = function() {
+				if(xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					result = xmlhttp.responseText;
+					console.log(result)
+					fn(result);
+				}
+			}
+			xmlhttp.open("POST", urlString, true);
+			xmlhttp.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded')
+			xmlhttp.send("data = " + postdata);
+		}
+
+		// 按下enter键查询
+		document.onkeydown = function(event){
+			if ($("#obj1").focus() || $("#obj2").focus()){
+				var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+				if (keyCode == 13){
+					username = $("#exampleUsername").val();
+					phone = $("#exampleInputPhoneNumber").val();
+					if (username == ""){
+						layer.msg("请输入用户名");
+					}
+					else{
+						layer.msg("请稍候");
+						ajaxSubmitForm();
+					}
+				}
+			}
+		}
+	</script>
+
+	{% endblock %}

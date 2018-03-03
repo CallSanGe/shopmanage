@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% load staticfiles %}
+
+{% block css %}
+<style type="text/css">
+    img{
+        height: 60px;
+    }
+    #table{
+        padding-right: 0;
+        margin-bottom: 0; 
+        text-align: center;
+        vertical-align: middle;
+    }
+    #table td {
+        vertical-align: middle;  
+    }
+    th{
+        text-align: center;
+    }	
+    #imagesdiv{
+			height: 60px;
+	}
+    #img{
+        src: static/myfile/1.jpg;
+        height: 60px;
+    }
+    .sumdiv{
+		background-color: #fff;
+		display: inline-block;
+		padding: 6px 12px;
+		margin-bottom: 0;
+		font-size: 14px;
+		font-weight: 400;
+		line-height: 1.42857143;
+		text-align: center;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+	}
+	</style>
+
+{% endblock %}
+
+{% block content %}
+
+<button onclick = "window.location.href='/adsecondkill/'" type="button" id = "tianjia"class="btn btn-primary addBtn" style="margin:5px;"><span class="glyphicon glyphicon-plus"></span>添加</button>
+<div id="xxx" class=" col-sm-12" style="padding:0;">
+    <a class="col-sm-12" style="margin:5px; padding-left:0; color: black;margin-right:0;"><strong>秒杀活动列表</strong></a>
+    <table id="table" class="table table-bordered" >
+        <tr name="row">
+            <td id="item" style="display:none"></td>
+           <th>活动id</th>
+            <th>商品</th>
+            <th>状态</th>
+            <th>开始时间</th>
+            <th>截止时间</th>
+            <th>编辑</th>
+        </tr>
+    </table>
+    <div class="text-center">
+        <ul id="visible-pages-example"></ul>
+    </div>
+</div>
+<!-- 模态框（Modal） -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                    &times;
+                </button>
+                <h4 class="modal-title" id="myModalLabel">
+                    添加活动
+                </h4>
+            </div>
+            <div class="modal-body">
+                <form id="myform" action="" enctype="multipart/form-data" method="post">
+                   <input type="hidden"   readonly= "true " name="killid" id="killid">
+                   
+                    <div style="padding-top:20px">
+                        <label for="">商品：</label><input type="text"   readonly= "true " name="goodsname" id="goodsname">
+                    </div>
+                    <div style="padding-top:20px">
+                        <label for="">状态：</label><input type="text"   readonly= "true " name="goodstatus" id="goodstatus">
+                    </div>
+                    <div style="padding-top:20px">
+                        <label for="">开始时间：</label><input   type="text" onblur="getVal(this.id)"  name="starttime" id="starttime"  onClick="WdatePicker({el:'starttime',dateFmt:'yyyy-MM-dd HH:mm:ss',minDate:'%y-%M-%d',maxDate: '#F{$dp.$D(\'stoptime\')}' })">
+                        <!-- <img onClick="WdatePicker({el:'starttime',dateFmt:'yyyy-MM-dd HH:mm:ss',maxDate: '#F{$dp.$D(\'stoptime\')}' })" src="{% static 'DatePicker/skin/datePicker.gif' %}" style =" width:30px; height:30px" align="absmiddle" > -->
+                    </div>
+                    <div style="padding-top:20px">
+                        <label for="">结束时间：</label><input   type="text"onblur="getVal(this.id)"  name="stoptime" id="stoptime"  onClick="WdatePicker({el:'stoptime',dateFmt:'yyyy-MM-dd HH:mm:ss',minDate: '#F{$dp.$D(\'starttime\')}' })">
+                        <!-- <img onClick="WdatePicker({el:'stoptime',dateFmt:'yyyy-MM-dd HH:mm:ss',minDate: '#F{$dp.$D(\'starttime\')}' })" src="{% static 'DatePicker/skin/datePicker.gif' %}" style =" width:30px; height:30px" align="absmiddle"> -->
+                    </div>
+                </form>
+                
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">关闭
+                </button>
+                <button type="button" class="btn btn-primary" id="submitBtn" onclick="ajaxSubmitForm()">
+                    提交
+                </button>
+            </div>
+        </div><!-- /.modal-content -->
+    </div><!-- /.modal -->
+</div>
+
+{% endblock %}
+{% block script %}
+<script src="{% static 'layer/layer.js' %}"></script>
+<script src="{% static 'js/jquery.form.min.js' %}"></script>
+<script src="{% static 'DatePicker/WdatePicker.js' %}"></script>
+<script type="text/javascript">
+
+
+var isGetData = false;
+
+var currpage = 1;
+var countPages = 0;
+var goodsListPages = 3
+var goodsCount = 1
+var thispage = 1
+var addGoodsIdRed = ""
+var commName = ""
+var timeBtnUp = 0
+var goodstatus1 = "未开始"
+ 
+function p(s) {
+    return s < 10 ? '0' + s: s;
+}
+function getVal(id)
+{
+   var a = document.getElementById('starttime').value
+   var start=new Date(a.replace("-", "/").replace("-", "/"));  
+   var b = document.getElementById('stoptime').value
+   var end=new Date(b.replace("-", "/").replace("-", "/")); 
+   var now = new Date();
+   var goodstatus = ''
+   if (now<start){
+    goodstatus = "未开始";
+    document.getElementById("goodstatus").value=goodstatus;   
+   }
+   if(now>=start&&now<end)
+   {
+    goodstatus = "正进行";
+    document.getElementById("goodstatus").value=goodstatus;   
+   }
+   if(now>=end)
+   {
+    goodstatus = "已结束";
+    document.getElementById("goodstatus").value=goodstatus;  
+   }}
+
+   
+    //添加item函数
+function adEleFn(data){
+    var killid = data.killid;
+    var starttime = data.starttime;
+    var stoptime = data.stoptime;
+    var goodsid = data.goodsid;
+    var goodsname =data.goodsname;
+    var bigData = data;
+
+    myPost('getdatatime' , {"starttime":starttime,"stoptime":stoptime , "killid":killid},function(result){
+        var goodstatus1 =result["datatime"]
+        goodstatus1 = goodstatus1 == "1" ? "正进行" : "已结束"
+        var Tr = '<tr goodsid="' + goodsid + '" name="row" class="myrow"><td>'+killid+'</td><td>' + goodsname + '</td><td>' + goodstatus1 + '</td><td>' + starttime + '</td><td>'+stoptime+'</td><td><button class="btn btn-success edit">编 辑</button>  <button class="btn btn-danger delete">删 除</button> </td></tr>';
+        $("#table").append(Tr);
+        myPost('secondkillManageJsonUpdata' , {"goodstatus":goodstatus1,"killid":killid} , function(data){
+             
+        }) 
+
+    })
+    
+    
+
+}
+
+    //当modal关闭的时候数据清除
+    $('#myModal').on('hide.bs.modal', function ()
+    {
+        $('#myform')[0].reset();
+        //这个方法来清除缓存
+        $(this).find("img").remove();
+    });
+    //解析数据函数
+    function parseDataFn(result){
+        var data = result.data;
+        $("#table").empty()
+        for (var i = 0; i < data.length; i++){
+            var perdata = data[i];
+            adEleFn(perdata);
+        }
+        
+    }
+    //请求数据
+function ajaxfn(){
+    if (isGetData == true) {
+        return
+    }
+    myPost('secondkillcommodityQuery', {"page":currpage} ,function (result){
+        isGetData = true
+        parseDataFn(result);
+        var adcounts = result.adcounts;
+        var countPages = Math.ceil(parseInt(adcounts) / 8 );
+        var spanele = '<span class="sumdiv">共' + countPages + '页,当前第' + currpage + '页,共' + adcounts + '条数据</span>';
+        $("#visible-pages-example").append(spanele);
+            $('#visible-pages-example').twbsPagination({
+            totalPages:countPages,
+            first: "首页",
+            last: "尾页",
+            prev: '上一页',
+            next: '下一页',
+            startPage: 1,
+            visiblePages: countPages>5?5:countPages,
+            version: '1.1',
+            onPageClick: function (event, page) {
+                currpage  = page;
+                $(".myrow").remove();
+                $(".sumdiv").remove();
+                ajaxfn();
+            }
+        });
+    });
+}
+    ajaxfn();
+    
+    
+    //ajaxform提交表单
+    function ajaxSubmitForm(){
+      
+        var option = {
+            url : "http://localhost:8000/secondkillManageJsonUpdata/",
+            type : 'POST',
+            dataType : 'json',
+            success : function(data) 
+            {
+                layer.msg("修改成功");
+
+               setTimeout(function(){
+                history.go(0)
+               } , 1000)
+
+                
+            },
+            error: function(data) {
+                layer.msg("修改失败");
+            }
+        };
+        $("#myform").ajaxSubmit(option);
+        return false;
+    }
+    //图片预览
+
+    var commName = ""
+    $(document).ready(function(){
+        $("#table").delegate("button","click",function(){
+            if($(this).html() == '编 辑'){
+                $("#myModal").modal("show");
+                var killid = $(this).parent().prev().prev().prev().prev().prev().html();
+                document.getElementById("killid").value=killid;
+                var goodsname = $(this).parent().prev().prev().prev().prev().html();
+                document.getElementById("goodsname").value=goodsname;
+                var goodstatus = $(this).parent().prev().prev().prev().html();
+                document.getElementById("goodstatus").value=goodstatus;
+            }
+            if($(this).html() == "删 除"){
+                var that = this;
+                var dataId= $(that).parents("tr").children("td").eq(0).text();
+                var goodsId = $(that).parents("tr").attr("goodsid")
+                myPost("secondkillManageJsonDelete" , {
+                    killid:dataId , 
+                    goodsid:goodsId
+                } , function (data) {
+                    layer.msg(data.message)
+                    window.location.reload()
+                })
+                
+            }
+        });
+    });
+
+
+
+</script>
+{% endblock %}
+
+{% block contentLeft %}
+秒杀管理
+<small>Version 5.0</small>
+{% endblock %}
+
+{% block contentRight %}
+<ol class="breadcrumb">
+        <li>
+            <a href="#"><i class="fa fa-dashboard"></i> Home</a>
+        </li>
+        <li class="active">秒杀管理</li>
+    </ol>
+{% endblock %}

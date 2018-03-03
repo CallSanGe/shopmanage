@@ -1,0 +1,810 @@
+{% extends "base.html" %} {% load staticfiles %} {% block css %}
+
+<style type="text/css">
+	.a-upload {
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.a-upload input {
+		position: absolute;
+		font-size: 100px;
+		right: 0;
+		top: 0;
+		opacity: 0;
+		display: inline-block;
+		filter: alpha(opacity=0);
+		cursor: pointer;
+		border: 1px solid blue;
+	}
+	
+	.a-upload:hover {
+		color: #444;
+		background: #eee;
+		border-color: #ccc;
+		text-decoration: none
+	}
+	
+	.biaojuzhong th {
+		text-align: center;
+	}
+	
+	.biaojuzhong td {
+		text-align: center;
+	}
+
+	.biaojuzhong td button{
+		padding: 2px 8px;
+		background-color: white;
+	}
+	
+	.sumdiv {
+		background-color: #fff;
+		display: inline-block;
+		padding: 6px 12px;
+		margin-bottom: 0;
+		font-size: 14px;
+		font-weight: 400;
+		line-height: 1.42857143;
+		text-align: center;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+	}
+	
+	#bigdiv {
+		background-color: #fff;
+		border: 1px solid #ccc;
+		border-collapse: collapse;
+	}
+	
+	.black_overlay {
+		display: none;
+		position: absolute;
+		top: 0%;
+		left: 0%;
+		width: 100%;
+		height: 100%;
+		background-color: black;
+		z-index: 1001;
+		-moz-opacity: 0.8;
+		opacity: .50;
+		filter: alpha(opacity=80);
+	}
+	
+	.white_content {
+		display: none;
+		position: absolute;
+		top: 10%;
+		left: 10%;
+		width: 80%;
+		height: 80%;
+		border: 8px solid lightblue;
+		background-color: white;
+		z-index: 1002;
+		overflow: auto;
+	}
+
+	#myListTableId td , #myListTableId th{
+		vertical-align: middle;
+	}
+</style>
+{% endblock %} {% block content %}
+<div class="row">
+		<div class="col-md-4 col-md-offset-3">
+			<div><input type="text" class="form-control" id="goodsSelectName" placeholder="商品名"></div>
+		</div>
+		<div>
+			<button type="submit" class="btn btn-success" id="goodsSelectBtn"><span class="glyphicon glyphicon-search" aria-hidden="true"></span>商品查询</button>
+		</div>
+</div>
+
+<div class="row">
+	<div class="row" style="height: 50px;">
+		<div class="col-md-6" style="text-align: left;">
+			<button id="deleteBtn" type="button" class="btn btn-danger"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span>批量删除</button>
+			<a href="/addGoods/" class="btn btn-info"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span>添加商品</a>
+			<button id="timeBtn" type="button" class="btn btn-warning"><span class="glyphicon glyphicon-download" aria-hidden="true">当前时间降序</span></button>
+			<button id="sellcountBtn" type="button" class="btn btn-primary"><span class="glyphicon glyphicon-download" aria-hidden="true">当前销量降序</span></button>		
+		</div>
+		<div class="col-md-6" style="text-align: right;">
+			<p>共有数据:<strong id="goodsNumber">0</strong>条</p>
+		</div>
+	</div>
+
+	<div class="" id="bigdiv">
+		<table class="table table-bordered" style=" margin-bottom: 0px;">
+			<caption><strong style="color: #000000;">商品列表</strong></caption>
+			<thead>
+				<tr class="biaojuzhong">
+					<th>
+						<input type="checkbox" id="checkbox-all" value="$(goodsid)">
+					</th>
+					<th>序号</th>
+					<th>图片</th>
+					<th>名称</th>
+					<th>分类 关键字</th>
+					<th>价钱</th>
+					<th>销量</th>
+					<th>状态</th>
+					<th>处理</th>
+					<th>轮播图</th>
+					<th>图文</th>
+					<th>编辑</th>
+				</tr>
+			</thead>
+
+			<tbody id="myListTableId" class="myListTable">
+			</tbody>
+
+		</table>
+
+		<!-- 确定删除福袋 模态框 -->
+		<div class="modal fade" id="exampleModal-confirm" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel">
+			<div class="modal-dialog" role="document">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+						<h4 class="modal-title" style="text-align: center;">确认删除</h4>
+					</div>
+					<div class="modal-body">
+						<table class="table table-bordered" style=" margin-bottom: 0px;">
+							<caption><strong style="color: #000000;" id="delete-counts"></strong></caption>
+							<thead>
+								<tr class="biaojuzhong">
+									<th>商品名称</th>
+									<th>商品号</th>
+									<th>福袋记录数</th>
+									<th>删除</th>
+								</tr>
+							</thead>
+							<tbody id="myListTable-confirm">
+							</tbody>
+						</table>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">取消</button>
+						<button type="button" class="btn btn-danger" id="deleteAll-confirm">全部删除</button>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="row" id="div3" style=" padding: 1% 0;">
+			<div class="col-md-12" style="text-align: left;">
+				<div class="text-center">
+					<ul id="visible-pages-example"></ul>
+
+
+					<ul id="xxx"></ul>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="fade" class="black_overlay">
+	</div>
+	<div id="MyDiv" class="white_content">
+		<div style="text-align: right; cursor: default; height: 40px;" id="move">
+			<span style="font-size: 16px;" onclick="CloseDiv('MyDiv','fade')">关闭</span>
+		</div>
+		<!--目前来说，我还是喜欢这个自己改造的弹出层。自己在项目中也用的是这个。-->
+		<div id="">
+			<div>
+				<h1>商品信息添加：</h1>
+				<script id="editor" type="text/plain" style="width:100%;height:300px;"></script>
+			</div>
+			<div id="btns">
+				
+				<br />
+				<div align="center">
+					<form style="text-align: center;" id="uploadForm" method="post" action="http://localhost:8000/saveOneImageToServer/">
+
+
+						<a style="display: inline-block;" href="javascript:;" class="a-upload">
+							<input class="myInput" type="file" name="imgsFile" id="">点击这里上传图片（支持jpg/jpeg/gif上传，不支持png格式的图片上传）
+						</a>
+
+						<input id="subbtn" class="btn btn-default" type="submit">
+
+					</form>
+				</div>
+				<br />
+				<div class="" role="group" style="text-align: center; padding-top: 4%;">
+					<button type="button" class="btn btn-default" onclick="addAll()">添加</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	{% endblock %} {% block contentRight %}
+
+	<ol class="breadcrumb">
+		<li>
+			<a href="#"><i class="fa fa-dashboard"></i> Home</a>
+		</li>
+		<li class="active">商品列表</li>
+	</ol>
+
+
+	{% endblock %} {% block contentLeft %} 商品列表
+	<small>Version 5.0</small> {% endblock %}
+{% block script %}
+<script src="{% static 'layer/layer.js' %}" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+$('body').append("<div style='display:none;width:100%; margin:0 auto;position:fixed;left:0;top:0;bottom: 0;z-index: 111;opacity: 0.5;' id='loading'><a style='left: 50%;position: absolute;top:50%'><img src='http://localhost:8000/static/myfile/loading.gif' /></a></div>")
+$(document).ajaxStart(function(){
+　　$("#loading").show();
+})
+$(document).ajaxComplete(function(){
+　　$("#loading").hide();
+})
+var goodsListPages = 3
+var goodsCount = 1
+var thispage = 1
+var addGoodsIdRed = ""
+var commName = ""
+var timeBtnUp = 0
+var sellcountBtnUp = 0
+
+var fenye = $('#visible-pages-example');
+var defaultOptions = ""
+
+
+var mainData = "";
+
+function addAll(goodsid) {
+	data = UE.getEditor('editor').getContent();
+	var objData = "goodsid=" + addGoodsIdRed + "&details=" + data; //post方式传送的数据
+	data = encodeURIComponent(data);
+	myPost("goodsManageJsonUpdata" ,{"goodsid":addGoodsIdRed , "details":data} ,function(data){
+		if(data["data"] == "success") {
+				layer.msg("商品详情添加成功。。。"); //请求传输成功回调函数
+				location.reload()
+			} else {
+				layer.msg("商品详情添加失败。。。"); //请求传输失败回调函数
+			}
+	})
+}
+
+$('#uploadForm').on('submit', function(e) {
+	e.preventDefault();
+	$(this).ajaxSubmit({
+		success: function(result) {
+			var imageName = result.imagePath;
+			//			addNewDiv(imageName)
+			imageName = "http://localhost:8000/static/myfile/" + imageName;
+			ue.setContent('<img src=' + imageName + ' width=200px height=120px>', true);
+		}
+	})
+});
+
+var ue = UE.getEditor('editor'); //勿删
+//  <img src="https://gss0.baidu.com/8_BXsjip0QIZ8tyhnq/timg?wh_rate=0&wapiknow&quality=100&size=w250&sec=0&di=e3c3ae2ef7382d567d05f2b09bef85d1&src=http%3A%2F%2Fg.hiphotos.baidu.com%2Fzhidao%2Fwh%253D800%252C450%2Fsign%3Dd6fc97b0b1a1cd1105e37a288922e4c8%2F3801213fb80e7bec7ac77061242eb9389b506b14.jpg>
+function tianjiatupian() {
+	console.log("添加图片按钮")
+	ue.setContent('<img src="https://gss0.baidu.com/8_BXsjip0QIZ8tyhnq/timg?wh_rate=0&wapiknow&quality=100&size=w250&sec=0&di=e3c3ae2ef7382d567d05f2b09bef85d1&src=http%3A%2F%2Fg.hiphotos.baidu.com%2Fzhidao%2Fwh%253D800%252C450%2Fsign%3Dd6fc97b0b1a1cd1105e37a288922e4c8%2F3801213fb80e7bec7ac77061242eb9389b506b14.jpg">', true);
+}
+
+function ShowDiv(show_div, bg_div) {
+	var commName = ""
+
+	data = UE.getEditor('editor').getContent();
+	var objData = "goodsid=" + addGoodsIdRed; //post方式传送的数据
+	myPost("goodsSelectByid" ,objData , function(data){
+		for(var i = 0; i < data.data.length; i++) {
+			if(data.data[i].goodsid == addGoodsIdRed) {
+				var detailsAll = data.data[i].details;
+				detailsAll = decodeURIComponent(detailsAll)
+				ue.setContent(detailsAll);					
+			}
+		}
+			$("#edui153").css({"position":"abdsolute" , "top":"-10000px"});
+			$("#edui148").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui268").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui263").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui262").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui261").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui260").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui259").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui258").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui257").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui256").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui255").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui254").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui253").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui252").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui247").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui248").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui238").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui219").css({"position":"abdsolute" , "top":"-10000px"})
+			$("#edui175").css({"position":"abdsolute" , "top":"-10000px"})
+	} )
+
+
+	document.getElementById(show_div).style.display = 'block';
+	document.getElementById(bg_div).style.display = 'block';
+	var bgdiv = document.getElementById(bg_div);
+	bgdiv.style.width = document.body.scrollWidth;
+	// bgdiv.style.height = $(document).height();
+	$("#" + bg_div).height($(document).height());
+
+	$(".myInput").width($(".a-upload").width());
+	$(".myInput").height($(".a-upload").height());
+}
+
+function CloseDiv(show_div, bg_div) {
+	document.getElementById(show_div).style.display = 'none';
+	document.getElementById(bg_div).style.display = 'none';
+};
+
+function oneGoods(data, i) {
+	console.log(data)
+	var goodsid = data["goodsid"];
+	var rebate = data["rebate"];
+	var lookhistoryid = data["lookhistoryid"];
+	var standard = data["standard"];
+	var images = data["images"];
+	var details = data["details"];
+	var shopname = data["shopname"];
+	var status = data["status"];
+	var uptime = data["uptime"];
+	var downtime = data["downtime"];
+	var price = data["price"];
+	var goodsName = data["goodsname"];
+	var stock = data["stock"];
+	var addtime = data["addtime"];
+	var sellcount = data["sellcount"];
+
+	var isinfudai = data["isinfudai"]
+	var isinmiaosha = data["isinmiaosha"]
+
+	var goodskeywords = data["keywords"]
+
+	var goodsPrice = data["price"]
+	var goodsProprice = data["proprice"]
+	var goodsPriceStyle = "color:red;"
+
+	if (goodsPrice - 0 > 0) {
+		goodsPrice = "￥" + goodsPrice
+	}
+
+	if (goodsProprice - 0 > 0) {
+		goodsProprice = "￥" + goodsProprice
+		goodsPriceStyle = "text-decoration:line-through; color:#aaa;"
+	}
+
+
+	var goodsStatusStr = "未知"
+	var goodsStatusColour = "black"
+	var upDisabled = ""
+	var downDisabled = ""
+	var upColour = "white"
+	var downColour = "white"
+	if (status == 1) {
+		goodsStatusStr = "已上架"
+		goodsStatusColour = "green"
+		upDisabled = "disabled"
+		upColour = ""
+	}else if (status == 0) {
+		goodsStatusStr = "未上架"
+		goodsStatusColour = "red"
+		downDisabled = "disabled"
+	}
+
+	var fudaiStr = ""
+	var miaoshaStr = ""
+
+	var previewImage = ""
+
+	if (images == "" || images == null || images.length <= 0) {
+		
+		
+	} else {
+		lunboImages = images.split("---")
+
+		if (lunboImages.length > 0) {
+			previewImage = lunboImages[0]
+		}
+	}
+	
+
+	if (previewImage == ""){
+		previewImage = defaultImageString
+	} else {
+		previewImage = defaultMyfilePath + previewImage
+	}
+
+
+	if (isinfudai == "true") {
+		fudaiStr = '<div><img style="width:25px;" src="http://localhost:8000/static/myfile/sucai/fudai.jpg" /></div>'
+	}
+
+	if (isinmiaosha == "true") {
+		console.log(goodsName)
+		miaoshaStr = '<div><img style="width:25px;" src="http://localhost:8000/static/myfile/sucai/miaosha.jpg" /></div>'
+	}
+
+	var row = (thispage - 1) * 10 + i
+	var ele = '<tr class="biaojuzhong" goodsid="' + goodsid + '"><td><input class="checkbox-one" type="checkbox"></td><th scope="row">' + row + '</th><td><img style="width:85px;" src="' + previewImage + '" /></td><td>' + goodsName + '</td><td style="width:10%;">' + standard + '<hr /><span>' + goodskeywords + '<span></td><td><span style="color:red;">' + goodsProprice + '</span><br><span style="' + goodsPriceStyle + '">' + goodsPrice + '</span></td><td>'+sellcount+'</td><td class="goodsStatus" style="color: ' + goodsStatusColour +';">' + goodsStatusStr + fudaiStr + miaoshaStr + '</td><td><button class="btn btn-default up" type="button" ' + upDisabled + '><span class="glyphicon glyphicon-upload " aria-hidden="true">上架 </span></button><br /><button class="btn btn-default down" type="button" ' + downDisabled + '><span class="glyphicon glyphicon-download" aria-hidden="true">下架</span></button></td><td></button><button class="btn btn-default  demo4" type="button"><span class="glyphicon glyphicon-list-alt" aria-hidden="true"></span></button></td><td><button class="btn btn-default demo5" type="button"><span class="glyphicon glyphicon-plus" aria-hidden="true"></span></button></td><td><button class="btn btn-default demo7" type="button"><span class="glyphicon glyphicon-file"  aria-hidden="true"></span></button><button class="btn btn-default demo8" type="button"><span class="glyphicon glyphicon-trash"  aria-hidden="true"></span></button></td></tr>'
+	$(".myListTable").append(ele)
+	
+}
+
+//解析数据到页面
+function goodsListToPage(data) {
+	for (var i = 0; i < data.length; i++) {
+		//console.log(data[i])
+		oneGoods(data[i], i+1)
+	}
+	$(".up").click(function(){
+		var that = this
+		goodsid = $(that).parents("tr").attr("goodsid")
+		myPost("goodsManageJsonUpdata" , {"status":1,"goodsid":goodsid} , function (data) {
+			if (data["data"] == "success") {
+				var goodsStatus = $(that).parents("tr").children(".goodsStatus")
+				// goodsStatus.text("已上架")
+				var goodsStatusContent = goodsStatus[0].innerHTML
+				goodsStatusContent = goodsStatusContent.replace("未知" , "已上架")
+				goodsStatusContent = goodsStatusContent.replace("未上架" , "已上架")
+				goodsStatus[0].innerHTML = goodsStatusContent
+				$(that).parents("td").children(".down").removeAttr("disabled").val()
+				$(that).parents("td").children(".up").attr("disabled","").val()
+				goodsStatus.attr("style", "color:green");
+				layer.msg('上架成功');
+			}
+			else{
+				layer.msg('上架失败');
+			}
+		});
+
+
+	});
+	$(".down").click(function(){
+		var that = this
+		goodsid = $(that).parents("tr").attr("goodsid")
+		myPost("goodsManageJsonUpdata" , {"status":0,"goodsid":goodsid} , function (data) {
+			if (data.status == "ok") {
+				var goodsStatus = $(that).parents("tr").children(".goodsStatus")
+				// goodsStatus.text("未上架")
+				var goodsStatusContent = goodsStatus[0].innerHTML
+				goodsStatusContent = goodsStatusContent.replace("未知" , "未上架")
+				goodsStatusContent = goodsStatusContent.replace("已上架" , "未上架")
+				goodsStatus[0].innerHTML = goodsStatusContent
+				$(that).parents("td").children(".up").removeAttr("disabled").val()
+				$(that).parents("td").children(".down").attr("disabled", "").val()
+				goodsStatus.attr("style", "color:red");
+				layer.msg('下架成功');
+			}
+			else{
+				layer.msg('下架失败');
+			}
+		});
+
+		 
+	});
+
+
+	$(".demo4").click(function() {
+		var that = $(this).parents("tr")
+		window.location.href = "/changePic/?goodsid=" + that.attr("goodsid");
+	});
+	$(".demo5").click(function() {
+		addGoodsIdRed = this.parentNode.parentNode.getAttribute("goodsid")
+		console.log(" 5")
+		ShowDiv('MyDiv', 'fade')
+	});
+	$(".demo6").click(function(){
+		console.log(" 6")
+	});
+	$(".demo7").click(function(){
+		currentIndex = $(this).parents("tr").index();
+        currentItem = mainData[currentIndex];
+        localStorage.setItem("data" ,JSON.stringify(currentItem));
+		localStorage.setItem("isEdit",'true')
+		setTimeout(function () {
+			window.location.href = "http://localhost:8000/addGoods/"
+		} , 1000)
+	});
+
+
+	$(".demo8").click(function(){
+		var that = $(this).parents("tr")
+
+
+		if (that.children("td").eq(6).html().indexOf("<img ") == -1) {
+			console.log("没有")
+		} else {
+			console.log("有")
+			var r = confirm("该商品存在于 福袋 或 秒杀活动中，您确定要删除.....")
+			if (r == true) {
+				console.log("duiduidui")
+			} else {
+				return
+			}
+		}
+
+
+		// 从商品轮播图中获取图片
+		var oneDeleteData = mainData[that.index()];
+		imageArr = [];
+		var tempArr = [];
+		var images = removeStringSpace(oneDeleteData.images)
+		if (images != "") {
+			tempArr = images.split("---")
+			for (var i=0;i<tempArr.length;i++){
+				imageString = removeStringSpace(tempArr[i])
+				if (imageString != ""){
+					imageArr.push(imageString)
+				}
+			}
+		}
+		
+		
+
+
+		// 从商品详情中获取图片
+		var details = decodeURIComponent(oneDeleteData.details);
+		var imgReg = /<img.*?(?:>|\/>)/gi;
+		var srcReg = /src=[\'\"]?([^\'\"]*)[\'\"]?/i;
+		var arr = details.match(imgReg);
+		if (arr == null || arr == undefined || arr.length <= 0) {
+			// console.log("商品详情中没有图片.....");
+		} else {
+			for(var i = 0; i < arr.length; i++) {
+				var src = arr[i].match(srcReg);
+				if(removeStringSpace(src[1]) != "") {
+					var myimageName = src[1].split("/")
+					myimageName = removeStringSpace(myimageName[myimageName.length - 1])
+					if (myimageName != "") {
+						imageArr.push(myimageName)
+					}
+				}
+			}
+		}
+		
+		
+		
+		
+		var goodsArr = [that.attr("goodsid")]
+
+
+		myPostGoodsManage("goodsManageJsonDelete",{goodsids:goodsArr , images:imageArr} , function(data){
+			if (data["status"] == "ok") {
+					var deleteCount = data['deleteCount']
+					loaddata()
+					layer.msg('删除' + deleteCount + "条记录成功");
+			}else{
+					layer.msg('删除失败');
+			}
+		})
+	});
+}
+// 按下enter键查询
+document.onkeydown = function(event){
+	var keyCode = event.keyCode ? event.keyCode : event.which ? event.which : event.charCode;
+	if (keyCode == 13){
+		thispage = 1
+		commName = $("#goodsSelectName").val()
+		if (commName == ""){
+			layer.msg("请输入商品名");
+		}
+		else{
+			layer.msg("请稍候");
+			loaddata();
+		}
+		loaddata()
+	}
+}
+
+$("#goodsSelectBtn").click(function(){
+	thispage = 1
+	$("#visible-pages-example").twbsPagination("destroy") //销毁分页栏
+	commName = $("#goodsSelectName").val()
+	if (commName == ""){
+		layer.msg("请输入商品名");
+	}
+	else{
+		layer.msg("请稍候");
+		loaddata();
+	}
+	loaddata()
+});
+var luckyGoods = {}
+
+$('#deleteBtn').click(function () {
+	
+	var goodsArr = []
+	var checkboxs = $('.checkbox-one')
+	for (var i = 0; i < checkboxs.length; i++) {
+		if($(checkboxs[i]).is(':checked')) {
+			var goodsidOne = $(checkboxs[i]).parents("tr").attr("goodsid")
+			goodsArr.push(goodsidOne)
+		}
+	}
+	myPostGoodsManage("selectLuckyJsonByGoodsId",{goodsids:goodsArr} , function(data){
+		if (data["status"] == "ok" && data["luckycount"] == 0) {
+			myPostGoodsManage("goodsManageJsonDelete" , {goodsids:goodsArr} , function (data) {
+				if (data["status"] == "ok") {
+					var deleteCount = data['deleteCount']
+					loaddata()
+					layer.msg("删除" + deleteCount + "条记录成功");
+				}
+				else{
+					layer.msg("删除失败")
+				}
+			});
+		} else if (data["status"] == "ok" && data["luckycount"] > 0) {
+			var deleteGoodsIdArr = []
+			for (var j = 0 ; j < goodsArr.length; j++) {
+				var tt = true
+				for (var k = 0; k < data.data.length; k++) {
+					if (goodsArr[j] == data.data[k].luckyData.goodsid) {
+						tt = false
+					}
+				}
+				if (tt == true) {
+					deleteGoodsIdArr.push(goodsArr[j])
+				}
+			}
+			// console.log(deleteGoodsIdArr)
+			myPostGoodsManage("goodsManageJsonDelete" , {goodsids:deleteGoodsIdArr} , function (data) {
+				if (data["status"] == "ok") {
+					var deleteCount = data['deleteCount']
+					loaddata()
+					layer.msg("删除" + deleteCount + "条记录成功");
+				}
+			});
+			$("#exampleModal-confirm").modal();
+			$("#delete-counts").text("冲突数量:" + data["luckycount"])
+			$("#myListTable-confirm").children("tr").remove()
+			$("#myListTable-confirm").append(ele)
+			for (var  i = 0; i< data.data.length; i++) {
+				var goodsname = data.data[i].luckyData.goodsname
+				var goodsid = data.data[i].luckyData.goodsid
+				var count = data.data[i].luckyCount
+				var ele = '<tr class="biaojuzhong" goodsid="' + goodsid + '"><td>' + goodsname + '</td><td>' + goodsid + '</td><td>' + count + '</td><td><button class="btn btn-danger delete-confirm" type="button"><span class="glyphicon glyphicon-trash"  aria-hidden="true"></span></button></td></tr>'
+				$("#myListTable-confirm").append(ele)
+			}
+			$(".delete-confirm").click( function () {
+				var goodsArr = []
+				var goodsidOne = $(this).parents("tr").attr("goodsid")
+				goodsArr.push(goodsidOne)
+				myPostGoodsManage("goodsManageJsonDelete" , {goodsids:goodsArr} , function (data) {
+					if (data["status"] == "ok") {
+						var deleteCount = data['deleteCount']
+						loaddata()
+						layer.msg("删除" + deleteCount + "条记录成功");
+					} else {
+						layer.msg("删除失败")
+					}
+				});
+				$("#exampleModal-confirm").modal("hide");
+			})
+		} else {
+				layer.msg('删除失败');
+		}
+	})
+	loaddata()
+})
+
+$("#deleteAll-confirm").click( function () {
+	var goodsArr = []
+	var goodsidOne = $("#myListTable-confirm").children("tr").attr("goodsid")
+	goodsArr.push(goodsidOne)
+	myPostGoodsManage("goodsManageJsonDelete" , {goodsids:goodsArr} , function (data) {
+		if (data["status"] == "ok") {
+			var deleteCount = data['deleteCount']
+			loaddata()
+			layer.msg("删除" + deleteCount + "条记录成功");
+		} else {
+			layer.msg("删除失败")
+		}
+	});
+	$("#exampleModal-confirm").modal("hide");
+})
+
+
+
+
+$('#checkbox-all').click(function () {
+	if($('#checkbox-all').is(':checked')) {
+		$(".checkbox-one").prop("checked",true);
+	}else{
+		$(".checkbox-one").prop("checked",false);
+	}
+});
+
+myflag=0
+
+function loaddata() {
+	$.ajax({
+		url: "http://localhost:8000/commodityQuery/?page=" + thispage + "&commName=" + commName + "&timeUP=" +timeBtnUp+ "&sellcountBtnUp=" +sellcountBtnUp,
+		success: function (data) {
+			
+			goodsCount = data.goodscount
+			goodsListPages = Math.ceil(parseInt(goodsCount) / 10 )
+			$(".myListTable").children("tr").remove()
+			//解析数据
+			mainData = data.data;
+	
+
+			goodsListToPage(mainData)
+			
+			if(data.data!="" && myflag==1){
+			        layer.msg("查找成功")
+			    }
+            if(data.data=="" && myflag==1){
+                    layer.msg("没有查找到数据")
+                }
+			//记录个数
+			$("#goodsNumber").text(goodsCount);
+			$("#visible-pages-example").children(".sumdiv").remove()
+			
+			var spanele = '<span class="sumdiv">共' + goodsListPages + '页,当前第' + thispage + '页,共' + goodsCount + '条数据</span>'
+			$("#visible-pages-example").append($(spanele))
+			createPageNav('#visible-pages-example' , goodsListPages , function(event , page){
+                thispage = page;
+                loaddata();
+            });
+			// addFenyeHtml(goodsListPages)
+		},
+		error: function (msg) {
+			console.log("error:获取数据失败")
+			console.log(msg); //错误信息
+		}
+	});
+}
+
+var a = ""
+
+var Dict = {{ Dict|safe }}
+console.log(typeof(Dict))
+if (this.Dict) {
+	for(i in Dict) {//注意，此处 i 为键值
+		a = Dict[i]
+	}
+}
+console.log(a)
+if(a!=""){
+	commName = a
+}
+loaddata()
+
+$("#timeBtn").click( function () {
+	if (timeBtnUp == 0) {
+		$(this).children("span").remove()
+		var ele = '<span class="glyphicon glyphicon-upload" aria-hidden="true">当前时间升序</span>'
+		$(this).append(ele)
+		timeBtnUp = 1
+		sellcountBtnUp = ''
+	} else {
+		$(this).children("span").remove()
+		var ele = '<span class="glyphicon glyphicon-download" aria-hidden="true">当前时间降序</span>'
+		$(this).append(ele)
+		timeBtnUp = 0
+		sellcountBtnUp = ''
+	}
+	thispage = fenye.twbsPagination('getCurrentPage');
+	loaddata()
+})
+
+$("#sellcountBtn").click( function () {
+	if (sellcountBtnUp == 0) {
+		$(this).children("span").remove()
+		var ele = '<span class="glyphicon glyphicon-upload" aria-hidden="true">当前销量升序</span>'
+		$(this).append(ele)
+		sellcountBtnUp = 1
+		timeBtnUp = ''
+	} else {
+		$(this).children("span").remove()
+		var ele = '<span class="glyphicon glyphicon-download" aria-hidden="true">当前销量降序</span>'
+		$(this).append(ele)
+		sellcountBtnUp = 0
+		timeBtnUp = ''
+	}
+	thispage = fenye.twbsPagination('getCurrentPage');
+	loaddata()
+})
+
+</script>
+{% endblock %}

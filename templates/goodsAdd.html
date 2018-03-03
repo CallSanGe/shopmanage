@@ -1,0 +1,799 @@
+{% extends "base.html" %} {% load staticfiles %} {% block css %}
+
+<style type="text/css">
+	.a-upload {
+		position: relative;
+		overflow: hidden;
+	}
+	
+	.a-upload input {
+		position: absolute;
+		font-size: 100px;
+		right: 0;
+		top: 0;
+		opacity: 0;
+		display: inline-block;
+		filter: alpha(opacity=0);
+		cursor: pointer;
+		border: 1px solid blue;
+	}
+	
+	.a-upload:hover {
+		color: #444;
+		background: #eee;
+		border-color: #ccc;
+		text-decoration: none
+	}
+	
+	.biaojuzhong th {
+		text-align: center;
+	}
+	
+	.biaojuzhong td {
+		text-align: center;
+	}
+	
+	.biaojuzhong td button {
+		padding: 2px 8px;
+		background-color: white;
+	}
+	
+	.sumdiv {
+		background-color: #fff;
+		display: inline-block;
+		padding: 6px 12px;
+		margin-bottom: 0;
+		font-size: 14px;
+		font-weight: 400;
+		line-height: 1.42857143;
+		text-align: center;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+	}
+	
+	#bigdiv {
+		background-color: #fff;
+		border: 1px solid #ccc;
+		border-collapse: collapse;
+	}
+	
+	.black_overlay {
+		display: none;
+		position: absolute;
+		top: 0%;
+		left: 0%;
+		width: 100%;
+		height: 100%;
+		background-color: black;
+		z-index: 1001;
+		-moz-opacity: 0.8;
+		opacity: .50;
+		filter: alpha(opacity=80);
+	}
+	
+	.white_content {
+		display: none;
+		position: absolute;
+		top: 10%;
+		left: 10%;
+		width: 80%;
+		height: 80%;
+		border: 8px solid lightblue;
+		background-color: white;
+		z-index: 1002;
+		overflow: auto;
+	}
+
+	.selectClassifycell{
+		background-color: lightcyan;
+	}
+</style>
+{% endblock %} {% block contentRight %}
+
+<ol class="breadcrumb">
+	<li>
+		<a href="#"><i class="fa fa-dashboard"></i> Home</a>
+	</li>
+	<li class="active">添加商品</li>
+</ol>
+
+{% endblock %} {% block contentLeft %} 商品添加
+<small>Version 5.0</small> {% endblock %} {% block content %}
+
+
+<!-- 商品分类模态框 -->
+<div class="modal fade" id="goodsClassifyModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+	<div class="modal-dialog" role="document">
+		<div class="modal-content">
+		<div class="modal-header">
+			<button type="button" class="close classifyHideBtn" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			<h4 class="modal-title" id="myModalLabel">商品分类</h4>
+		</div>
+		<div class="modal-body" >
+			<div class="row" style="padding-left:15px; padding-bottom:15px;">
+
+				<div class="col-sm-6" style="text-align:center;">大分类</div>
+				<div class="col-sm-6 minClassifyTitle" style="text-align:center;"></div>
+
+			</div>
+
+			<div class="row" style="padding-left:15px;">
+				<div class="list-group bigClassifyList col-sm-6">
+				</div>
+				<div class="list-group minClassifyList col-sm-6">
+				</div>
+			</div>
+
+			<div class="row" style="">
+					
+				<div class="col-sm-6" style="text-align:center;">
+					<input type="text" class="form-control addBigClassifyText"><button style="margin-top:15px;" type="button" class="btn btn-primary addBigClassifyBtn">添加</button>	
+				</div>
+				<div class="col-sm-6" style="text-align:center;">
+					<input type="text" class="form-control addMinClassifyText"><button style="margin-top:15px;" type="button" class="btn btn-primary addMinClassifyBtn">添加</button>
+				</div>
+
+			</div>
+
+		</div>
+		<div class="modal-footer">
+
+			
+		</div>
+		</div>
+	</div>
+</div>
+
+<div class="post">
+	<div class="container">
+		<div class="rt_content">
+			<form class="form-horizontal" id="addgoods" action="" method="post">
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">商品名称：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input class="form-control only" onkeyup="myfun(this);" name="goodsname" id="goodsname" value="" data-bv-notempty data-bv-notempty-message="商品名不能为空" >
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">所属商家：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input class="form-control only" onkeyup="myfun(this);" name="shopname" id="shopname" value="" check-type="required" required-message="所属商家不能为空！">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">搜索关键词：</label>
+					<div class="col-sm-3 form-group">
+						<input class="form-control only"  name="keywords"  value="" placeholder="关键词中间用逗号隔开">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">商品类别：</label>
+					<div class="col-sm-3 form-group">
+						<!-- <input class="form-control only" onkeyup="myfun(this);" id="standard" name="standard" value="" check-type="required" required-message="商家类别不能为空！"> -->
+						<select name="bigClassiData" class="form-control bigCalssifySelect" onchange="selectBigData(this.value)" style="width: 100%;">
+							
+						</select>
+						<select name="minClassiData" class="form-control minCalssifySelect" onchange="selectMinData(this.value)" style="width: 100%;">
+							
+						</select>
+						<a class="addModalBtn" data-toggle="modal">没有您要的分类？</a>
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">颜色/口味：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input class="form-control only" onkeyup="myfun(this);" name="color" id="color" value="" >
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">尺寸/参数：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input class="form-control only" onkeyup="myfun(this);" id="size" name="size" value="">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">数量：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input type="number" class="form-control only" onkeyup="myfun(this);" name="counts" id="counts" value="" check-type="required" required-message="商品数量不能为空！">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">本金：</label>
+					<div class="col-sm-3 form-group">
+						<input type="number" step="0.01" class="form-control only" onkeyup="myfun(this);" name="principal" id="principal" value="" check-type="required" required-message="商品本金不能为空！">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">单价：<span style="font-size:20px; color:red; line-height:16px; vertical-align:bottom;">*</span></label>
+					<div class="col-sm-3 form-group">
+						<input type="number" step="0.01" class="form-control only" onkeyup="myfun(this);" id="price" name="price" value="" check-type="required" required-message="商品单价不能为空！">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">促销价格：</label>
+					<div class="col-sm-3 form-group">
+						<input type="number" step="0.01" class="form-control only" onkeyup="myfun(this);" name="proprice" id="proprice" value="">
+					</div>
+				</div>
+				
+					
+				<div class="form-group td">
+						
+					<label class="col-sm-4 control-label">促销开始日期：</label>
+					
+					<div class="col-sm-3 form-group">
+							<input type="checkbox" id="cuxiaoRead" > 促销：</label>
+						<input readonly="true" class="form-control only cuxiaoStart" type="date" onchange="myfun(this);" name="prostart" id="prostart" value="1999-01-01">
+
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">促销结束日期：</label>
+					<div class="col-sm-3 form-group">
+						<input readonly="true" class="form-control only cuxiaoStop" type="date" onchange="myfun(this);" id="proend" name="proend" value="1999-01-01">
+					</div>
+				</div>
+				
+
+				<div class="form-group td">
+					<label class="col-sm-4 control-label">返利</label>
+					<div class="col-sm-3 form-group">
+						<input type="number" step="0.01" class="form-control only" onkeyup="myfun(this);" id="rebate" name="rebate" value="">
+					</div>
+				</div>
+				<div class="form-group td">
+					<label class="col-sm-4 control-label ">                
+			<div class="checkbox" >
+				  <label>
+			<input type="checkbox" id="checkboxread" > 运费：</label>
+				</div>
+				</label>
+
+				<div class="col-sm-3 form-group">
+					<input type="number" step="0.01" class="form-control readon" onkeyup="myfun(this);" id="transportmoney" name="transportmoney" value="" readonly="true">
+				</div>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<div class="table-responsive table-bordered ">
+
+			<table class="table table-bordered " style="margin-bottom: 0px;">
+
+				<!--<table class="table table-bordered table-hover" contenteditable="true">-->
+				<thead>
+
+				</thead>
+				<tr style=" background-color: rgb(255, 255, 255);
+										padding-left: 5px;">
+					<th colspan="13">商品详情</th>
+				</tr>
+
+				<tr style=" background-color: rgb(250, 250, 250);
+										padding-left: 5px;">
+					<th>商品名称</th>
+					<th>所属商家</th>
+					<th>商品类别</th>
+					<th>颜色/口味</th>
+					<th>尺寸/参数</th>
+					<th>数量</th>
+					<th>本金</th>
+					<th>单价</th>
+					<th>促销价格</th>
+					<th>促销开始日期</th>
+					<th>促销结束日期</th>
+					<th>返利</th>
+					<th>运费</th>
+				</tr>
+
+				<tbody class="myListTable">
+					<tr class="idatas" style=" background-color: rgb(255, 255, 255);
+						padding-left: 5px;">
+						<td style="height:28px"></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+						<td></td>
+				</tbody>
+			</table>
+		</div>
+	</div>
+	<div class="form-group ">
+		<div class="col-sm-offset-5 col-md-12" style="margin-top:40px">
+			<button type="button" class="btn btn-success hidden" id="updata">更新</button>
+			<button type="button" class="btn btn-info" id="sub"> 提交</button>
+		</div>
+	</div>
+</div>
+</form>
+</div>
+{% endblock %} {% block script %}
+<script type="text/javascript">
+
+	// 商品分类 模态框 关闭按钮事件
+	$(".classifyHideBtn").click(function () {
+		$('#goodsClassifyModal').modal('hide')
+		window.location.reload()
+	}) 
+
+
+	// 监听回车按钮
+	document.onkeydown = function (event) {
+		if (event.key == 'Enter') {
+			// 先获取输入框元素
+			var bigClassifyText = $(".addBigClassifyText")[0];
+			var minClassifyText = $(".addMinClassifyText")[0];
+			if (document.hasFocus() && document.activeElement === bigClassifyText){
+				bigClassifyBtnFn()
+				return
+			}
+
+			if (document.hasFocus() && document.activeElement === minClassifyText){
+				minClassifyBtnFn()
+				return
+			}
+
+			console.log("meizhaodao")
+		}
+	}
+
+	// 当前选中的大分类的名字
+	var currentSelectBigClassifyName = ""
+	// 当前选中的大分类cell的下标
+	var currentSelectBigClassifycellIndex = 0;
+
+	// 没有您要的分类? 按钮事件	
+	$(".addModalBtn").click(function () {
+		$('#goodsClassifyModal').modal('show')
+		getBigClassifyData(function (bigData) {
+			$(".bigClassifyList").empty()
+			for (var i = 0; i < bigData.data.length; i++) {
+				var aEle = document.createElement("a")
+				$(aEle).addClass("list-group-item")
+				if (i == 0) {
+					$(aEle).addClass("selectClassifycell")
+				}
+				aEle.innerHTML = bigData.data[i].name + '<span style="float:right;" class="glyphicon glyphicon-trash bigClassifyListDeleteBtn"  aria-hidden="true"></span>'
+				$(".bigClassifyList").append($(aEle))
+			}
+
+			// 每一行cell的点击事件
+			$(".bigClassifyList .list-group-item").click(function () {
+				modalSelectBigData(this , this.innerText)
+			}) 
+
+			// 每一行cell上删除图表的点击事件
+			$(".bigClassifyListDeleteBtn").click(function (event) {
+				deleteOneClassifyData("bigClassify" , this , event)
+			})
+
+			
+
+			// 获取商品小分类数据
+			getMinClassifyData(function (minData) {
+				$(".minClassifyList").empty()
+				currentSelectBigClassifyName = bigData.data[0].name
+				$(".minClassifyTitle").text(currentSelectBigClassifyName)
+				for (var i = 0; i < minData.data.length; i++) {
+					
+					if (minData.data[i].bigName == currentSelectBigClassifyName){
+						var aEle = document.createElement("a")
+						$(aEle).addClass("list-group-item")
+						aEle.innerHTML = minData.data[i].minName + '<span style="float:right;" class="glyphicon glyphicon-trash bigClassifyListDeleteBtn"  aria-hidden="true"></span>'
+						$(".minClassifyList").append($(aEle))
+					}
+				}
+
+				$(aEle).children("span").click(function () {
+					deleteOneClassifyData("minClassify" , this , event)
+				})
+			})
+		})
+
+	})
+
+	// 删除一条分类数据的点击事件
+	function deleteOneClassifyData(dataType , myThis , myEvent) {
+		myEvent.preventDefault()
+		myEvent.stopPropagation()
+		var deleteName = $(myThis).parents(".list-group-item").text()
+		var that = myThis;
+		// 将该条分类数据从服务器中删除 
+		console.log(deleteName)
+		if (dataType == "bigClassify") {
+			myPost("deleteBigClassify" , {deleteName:deleteName} , function (data) {
+				if (data.status == "ok") {
+					isUpdateBigClassifyData = true
+					$(that).parents(".list-group-item").remove()
+					if (deleteName == currentSelectBigClassifyName) {
+						$(".minClassifyList").empty()
+					}
+				}
+				layer.msg(data.message)
+			})
+		}
+		if (dataType == "minClassify") {
+			myPost("deleteMinClassify" , {deleteBigName:currentSelectBigClassifyName , deleteMinName:deleteName} , function (data) {
+				if (data.status == "ok") {
+					isUpdateMinClassifyData = true
+					$(that).parents(".list-group-item").remove()
+				}
+				layer.msg(data.message)
+			})
+		}
+		
+	}
+
+	// 模态框上大分类cell的点击事件
+	function modalSelectBigData (mythis , currentBigName) {
+		currentSelectBigClassifyName = currentBigName
+		$(".minClassifyTitle").text(currentSelectBigClassifyName)
+		$(".bigClassifyList").children("a").eq(currentSelectBigClassifycellIndex).removeClass("selectClassifycell")
+		currentSelectBigClassifycellIndex = $(mythis).index()
+		$(mythis).addClass("selectClassifycell")
+		getMinClassifyData(function (minData) {
+			$(".minClassifyList").empty()
+			for (var i = 0; i < minData.data.length; i++) {
+				if (minData.data[i].bigName == currentBigName){
+					var aEle = document.createElement("a")
+					$(aEle).addClass("list-group-item")
+					aEle.innerHTML = minData.data[i].minName + '<span style="float:right;" class="glyphicon glyphicon-trash bigClassifyListDeleteBtn"  aria-hidden="true"></span>'
+					$(".minClassifyList").append($(aEle))
+
+
+					// 给该cell上的删除图片按钮添加点击事件
+					$(aEle).children("span").click(function (event) {
+						deleteOneClassifyData("minClassify" , this , event)
+					})
+				}
+			}
+		})
+	}
+
+	// 向大商品分类中添加分类数据
+	function addDataToBigClassify(bigName) {
+		myPost("addBigClassify" , {bigName:bigName} , function (data) {
+			if (data.status == "ok") {
+				$(".addBigClassifyText").val("")
+				isUpdateBigClassifyData = true;
+				var aEle = document.createElement("a")
+				$(aEle).addClass("list-group-item")
+				aEle.innerHTML = bigName + '<span style="float:right;" class="glyphicon glyphicon-trash bigClassifyListDeleteBtn"  aria-hidden="true"></span>'
+				$(".bigClassifyList").append($(aEle))
+
+				currentSelectBigClassifyName = bigName
+				$(".minClassifyTitle").text(currentSelectBigClassifyName)
+				$(".bigClassifyList").children("a").eq(currentSelectBigClassifycellIndex).removeClass("selectClassifycell")
+				currentSelectBigClassifycellIndex = $(aEle).index()
+				$(aEle).addClass("selectClassifycell")
+
+				// 给该cell添加点击事件
+				$(aEle).click(function () {
+					modalSelectBigData(this , this.innerText)
+				}) 
+
+				// 给该cell上的删除图片按钮添加点击事件
+				$(aEle).children("span").click(function (event) {
+					deleteOneClassifyData("bigClassify" , this , event)
+				})
+
+			}	
+			layer.msg(data.message)
+		})
+	}
+
+	// 向小商品分类中添加分类数据
+	function addDataToMinClassify(bigName , minName) {
+		myPost("addMinClassify" , {bigName:bigName , minName:minName} , function (data) {
+			if (data.status == "ok") {
+				$(".addMinClassifyText").val("")
+				isUpdateMinClassifyData = true;
+				var aEle = document.createElement("a")
+				$(aEle).addClass("list-group-item")
+				aEle.innerHTML = minName + '<span style="float:right;" class="glyphicon glyphicon-trash bigClassifyListDeleteBtn"  aria-hidden="true"></span>'
+				$(".minClassifyList").append($(aEle))
+
+				// 给该cell上的删除图片按钮添加点击事件
+				$(aEle).children("span").click(function (event) {
+					deleteOneClassifyData("minClassify" , this , event)
+				})
+
+			}	
+			layer.msg(data.message)
+		})
+	}
+
+
+	// 模态框上 大分类添加按钮的点击事件
+	function bigClassifyBtnFn () {
+		var bigName = $(".addBigClassifyText").val().replace(/\s/g, "")
+		if (bigName.length <= 0){
+			layer.msg("请输入商品分类的名字....")
+			return
+		}
+
+		getBigClassifyData(function (bigData) {
+			for (var i = 0; i < bigData.data.length; i++) {
+				if (bigData.data[i].name == bigName) {
+					$(".addBigClassifyText").val("")
+					layer.msg("已经有该分类了.....")
+					return
+				}
+			}
+
+			addDataToBigClassify(bigName)
+		})
+	}
+	$(".addBigClassifyBtn").click(function () {
+		bigClassifyBtnFn()
+	})
+
+
+	// 模态框上 小分类添加按钮 的点击事件
+	function minClassifyBtnFn () {
+		var minName = $(".addMinClassifyText").val().replace(/\s/g, "")
+		if (minName.length <= 0){
+			layer.msg("请输入商品分类的名字....")
+			return
+		}
+
+		if (currentSelectBigClassifyName == "") {
+			layer.msg("请选择左侧的一个分类......")
+			return
+		} else {
+
+			getMinClassifyData(function (minData) {
+				for (var i = 0; i < minData.data.length; i++) {
+					if (minData.data[i].bigName == currentSelectBigClassifyName && minData.data[i].minName == minName) {
+						$(".addMinClassifyText").val("")
+						layer.msg("已经有该分类了.....")
+						return
+					}
+				}
+
+				addDataToMinClassify(currentSelectBigClassifyName , minName)
+			})
+		}
+	}
+	$(".addMinClassifyBtn").click(function () {
+		minClassifyBtnFn()
+	})
+	
+
+	// 根据商品分类数据做下拉列表
+	function createSelectEleByStandardData (data) {
+		var goodsClassifyArr = data.split("-")
+		if (goodsClassifyArr.length == 2) {
+			var bigClassifyName = goodsClassifyArr[0]
+			var minClassifyName = goodsClassifyArr[1]
+			getBigClassifyData(function (bigData) {
+				$(".bigCalssifySelect").empty()
+				for (var i = 0; i < bigData.data.length; i++) {
+					var optionEle = document.createElement("option")
+					optionEle.innerText = bigData.data[i].name
+					$(".bigCalssifySelect").append($(optionEle))
+				}
+				$(".bigCalssifySelect").val(bigClassifyName)
+				
+
+				// 获取商品小分类数据
+				getMinClassifyData(function (minData) {
+					$(".minCalssifySelect").empty()
+					for (var i = 0; i < minData.data.length; i++) {
+						if (minData.data[i].bigName == bigClassifyName){
+							var optionEle = document.createElement("option")
+							optionEle.innerText = minData.data[i].minName
+							$(".minCalssifySelect").append($(optionEle))
+						}
+					}
+					$(".minCalssifySelect").val(minClassifyName)
+					myfun(".minCalssifySelect")
+				})
+
+				
+			})
+			
+		}
+	}
+
+	// 商品大分类的选中事件
+	function selectBigData (currentBigName) {
+		// 获取商品小分类数据
+		getMinClassifyData(function (minData) {
+			$(".minCalssifySelect").empty()
+			for (var i = 0; i < minData.data.length; i++) {
+				if (minData.data[i].bigName == currentBigName){
+					var optionEle = document.createElement("option")
+					optionEle.innerText = minData.data[i].minName
+					$(".minCalssifySelect").append($(optionEle))
+				}
+			}
+			myfun(".minCalssifySelect")
+		})
+	}
+
+	// 商品小分类的选中事件
+	function selectMinData (currentMinName) {
+		myfun(".minCalssifySelect")
+	}
+
+	$('#checkboxread').click(function() {
+		if($('#checkboxread').is(':checked')) {
+
+			$(".readon").prop("readonly", false);
+		} else {
+
+			$(".readon").prop("readonly", true);
+		}
+	})
+
+	$('#cuxiaoRead').click(function() {
+		if($('#cuxiaoRead').is(':checked')) {
+
+			$(".cuxiaoStart").prop("readonly", false);
+			$(".cuxiaoStop").prop("readonly", false);
+		} else {
+
+			$(".cuxiaoStart").prop("readonly", true);
+			$(".cuxiaoStop").prop("readonly", true);
+		}
+	})
+
+	$('#sub').click(function() {
+
+		if (removeStringSpace($("#goodsname").val()) == "") {
+			layer.msg("商品名不能为空。。。。")
+			return
+		}
+
+		if (removeStringSpace($("#shopname").val()) == "") {
+			layer.msg("所属商家不能为空。。。。")
+			return
+		}
+
+		if (removeStringSpace($("#color").val()) == "") {
+			layer.msg("颜色/口味不能为空。。。。")
+			return
+		}
+
+		if (removeStringSpace($("#size").val()) == "") {
+			layer.msg("尺寸/参数不能为空。。。。")
+			return
+		}
+
+		if (removeStringSpace($("#counts").val()) == "") {
+			layer.msg("数量不能为空。。。。")
+			return
+		}
+
+		if (removeStringSpace($("#price").val()) == "") {
+			layer.msg("单价不能为空。。。。")
+			return
+		}
+		
+		$("#addgoods").ajaxSubmit({
+			url: "/goodsManageJsonAdd/",
+			success: function(data) {
+				console.log(data)
+				layer.msg("添加商品成功");
+				window.location.href = "http://localhost:8000/goodsManage/";
+				
+			}	
+		});
+		$(this).attr('disabled','disabled').die('click');
+	})
+
+	if(localStorage.getItem("isEdit") == "true") {
+		
+		$("h1").html("编辑商品<small>Version 5.0</small>");
+		$("#updata").removeClass("hidden");
+		$("#sub").addClass("hidden");
+		var data = JSON.parse(localStorage.getItem("data"));
+		$("#goodsname").val(data.goodsname);
+		$("#shopname").val(data.shopname);
+		// $("#standard").val(data.standard);
+		createSelectEleByStandardData(data.standard)
+		$("#color").val(data.color);
+		$("#size").val(data.size);
+		$("#counts").val(data.counts);
+		$("#principal").val(data.principal);
+		$("#price").val(data.price);
+		$("#proprice").val(data.proprice);
+		$("#rebate").val(data.rebate);
+		$("#prostart").val(data.prostart);
+		$("#proend").val(data.proend);
+		// 跟新底部展示区域
+		var alertName = ["#proend" , "#prostart" , "#rebate" , "#proprice" , "#goodsname" , "#shopname" , "#color" , "#size" , "#counts" , "#principal" , "#price" , "#transportmoney"]
+		for (var i = 0; i < alertName.length; i++) {
+			myfun(alertName[i])
+		}
+		localStorage.setItem("data", "");
+		localStorage.setItem("isEdit", "flase")
+
+		$('#updata').click(function() {
+			
+			var bigFenleiData = $(".bigCalssifySelect").val()
+			var minFenleiData = $(".minCalssifySelect").val()
+			var goodsid = data.goodsid;
+			var goodsname = $("#goodsname").val();
+			var shopname = $("#shopname").val();
+			var color = $("#color").val();
+			var size = $("#size").val();
+			var counts = $("#counts").val();
+			var principal = $("#principal").val();
+			var price = $("#price").val();
+			var proprice = $("#proprice").val();
+			var rebate = $("#rebate").val();
+			var prostart = $("#prostart").val();
+			var proend = $("#proend").val();
+			var objData = {
+				"#goodsid": data.goodsid,
+				"#goodsname": goodsname,
+				"#shopname": shopname,
+				"#standard": bigFenleiData + "-" + minFenleiData,
+				"#color": color,
+				"#size": size,
+				"#counts": counts,
+				"#principal": principal,
+				"#price": price,
+				"#proprice": proprice,
+				"#rebate": rebate
+			}
+			
+			myPost("goodsManageJsonUpdata", objData, function(data) {
+				if(data["status"] == "ok") {
+					layer.msg("修改商品信息成功");
+					window.location.href = "http://localhost:8000/goodsManage/"
+				} else {
+					layer.msg("修改商品信息失败");
+				}
+			})
+		})
+	} else {
+		// 获取商品大类别数据
+		getBigClassifyData(function (bigData) {
+			$(".bigCalssifySelect").empty()
+			for (var i = 0; i < bigData.data.length; i++) {
+				var optionEle = document.createElement("option")
+				optionEle.innerText = bigData.data[i].name
+				$(".bigCalssifySelect").append($(optionEle))
+			}
+			// 获取商品小分类数据
+			getMinClassifyData(function (minData) {
+				$(".minCalssifySelect").empty()
+				for (var i = 0; i < minData.data.length; i++) {
+					if (minData.data[i].bigName == bigData.data[0].name){
+						var optionEle = document.createElement("option")
+						optionEle.innerText = minData.data[i].minName
+						$(".minCalssifySelect").append($(optionEle))
+					}
+				}
+				myfun(".minCalssifySelect")
+			})
+		})
+	}
+
+	function myfun(aaa) {
+
+		// console.log(aaa)
+
+		var myValue = $(aaa).val();
+		var myIndex = $(aaa).parents(".td").index();
+		console.log(myIndex)
+		if (aaa == ".minCalssifySelect"){
+			myValue = $(".bigCalssifySelect").val() + "-" + $(".minCalssifySelect").val() 
+		}
+
+		$($(".idatas").children("td")[myIndex]).text(myValue)
+
+	}
+</script>
+{% endblock %}
